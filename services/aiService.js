@@ -1,21 +1,40 @@
 const MealAnalysis = require('../models/MealAnalysis');
 const Alternative = require('../models/Alternative');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
+const fetch = require('node-fetch');
 
-const simulateAIAnalysis = () => ({
-  mealName: 'Analyzed Meal',
-  estimatedCalories: Math.floor(Math.random() * 400) + 200,
-  macros: {
-    protein: Math.floor(Math.random() * 30) + 10,
-    carbs: Math.floor(Math.random() * 50) + 20,
-    fat: Math.floor(Math.random() * 20) + 5,
-    fiber: Math.floor(Math.random() * 10) + 2
-  },
-  aiResponse: 'Meal analyzed successfully using AI vision model'
-});
+const AI_API_URL = process.env.AI_API_URL;
 
 exports.analyzeMeal = async (userId, imageUrl) => {
-  const analysis = simulateAIAnalysis();
-  const mealAnalysis = await MealAnalysis.create({ user: userId, imageUrl, ...analysis });
+  // إرسال الصورة للـ Flask API
+  const imagePath = path.join(__dirname, '..', imageUrl);
+  const formData = new FormData();
+  formData.append('image', fs.createReadStream(imagePath));
+
+  const response = await fetch(`${AI_API_URL}/predict`, {
+    method: 'POST',
+    body: formData,
+    headers: formData.getHeaders()
+  });
+
+  const aiResult = await response.json();
+
+  // حفظ النتيجة في MongoDB
+  const mealAnalysis = await MealAnalysis.create({
+    user: userId,
+    imageUrl,
+    mealName: aiResult.results.map(r => r.food).join(', ') || 'Unknown Meal',
+    estimatedCalories: aiResult.total_calories,
+    macros: {
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0
+    },
+    aiResponse: JSON.stringify(aiResult.results)
+  });
 
   await Alternative.insertMany([
     { mealAnalysis: mealAnalysis._id, name: 'Grilled Chicken Salad', calories: mealAnalysis.estimatedCalories - 50, description: 'High protein, low carb' },
