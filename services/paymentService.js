@@ -1,17 +1,17 @@
 const Payment = require('../models/Payment');
 const Subscription = require('../models/Subscription');
 
-exports.processPayment = async (userId, subscriptionId, amount, paymentMethod) => {
+exports.processPayment = async (paymentData) => {
+
   const payment = await Payment.create({
-    user: userId,
-    subscription: subscriptionId,
-    amount,
-    paymentMethod,
+    ...paymentData,
     status: 'pending',
     transactionId: `TXN-${Date.now()}`
   });
+
   return payment;
 };
+
 
 exports.confirmPayment = async (paymentId) => {
   const payment = await Payment.findByIdAndUpdate(paymentId, { status: 'completed' }, { new: true });

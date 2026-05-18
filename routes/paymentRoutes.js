@@ -4,7 +4,7 @@ const { processPayment, confirmPayment, getMyPayments, getAllPayments, validateP
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roles');
 
-router.post('/process', protect, authorize('user'), processPayment);
+router.post('/process', protect, authorize('user','client'), processPayment);
 router.put('/:id/confirm', protect, confirmPayment);
 router.get('/my', protect, getMyPayments);
 router.get('/', protect, authorize('admin'), getAllPayments);
