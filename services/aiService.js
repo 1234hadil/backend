@@ -3,12 +3,12 @@ const Alternative = require('../models/Alternative');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const AI_API_URL = process.env.AI_API_URL;
 
 exports.analyzeMeal = async (userId, imageUrl) => {
-  // إرسال الصورة للـ Flask API
+  // send image to AI API for analysis
   const imagePath = path.join(__dirname, '..', imageUrl);
   const formData = new FormData();
   formData.append('image', fs.createReadStream(imagePath));
@@ -21,7 +21,7 @@ exports.analyzeMeal = async (userId, imageUrl) => {
 
   const aiResult = await response.json();
 
-  // حفظ النتيجة في MongoDB
+  //save analysis result to DB
   const mealAnalysis = await MealAnalysis.create({
     user: userId,
     imageUrl,
