@@ -8,38 +8,83 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 const AI_API_URL = process.env.AI_API_URL;
 
 exports.analyzeMeal = async (userId, imageUrl) => {
-  // send image to AI API for analysis
+
   const imagePath = path.join(__dirname, '..', imageUrl);
+
   const formData = new FormData();
-  formData.append('image', fs.createReadStream(imagePath));
 
-  const response = await fetch(`${AI_API_URL}/predict`, {
-    method: 'POST',
-    body: formData,
-    headers: formData.getHeaders()
-  });
+  formData.append(
+    'image',
+    fs.createReadStream(imagePath)
+  );
 
-  const aiResult = await response.json();
+  const response = await fetch(
+    `${AI_API_URL}/predict`,
+    {
+      method: 'POST',
+      body: formData,
+      headers: formData.getHeaders()
+    }
+  );
 
-  //save analysis result to DB
+  const text = await response.text();
+
+  console.log("AI RESPONSE:");
+  console.log(text);
+
+  let aiResult;
+
+  try {
+
+    aiResult = JSON.parse(text);
+
+  } catch(err){
+
+    throw new Error(
+      "AI API did not return valid JSON"
+    );
+  }
+
   const mealAnalysis = await MealAnalysis.create({
+
     user: userId,
+
     imageUrl,
-    mealName: aiResult.results.map(r => r.food).join(', ') || 'Unknown Meal',
-    estimatedCalories: aiResult.total_calories,
-    macros: {
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      fiber: 0
+
+    mealName:
+      aiResult.results?.map(r => r.food).join(', ')
+      || 'Unknown Meal',
+
+    estimatedCalories:
+      aiResult.total_calories || 0,
+
+    macros:{
+      protein:0,
+      carbs:0,
+      fat:0,
+      fiber:0
     },
+
     aiResponse: JSON.stringify(aiResult.results)
+
   });
 
   await Alternative.insertMany([
-    { mealAnalysis: mealAnalysis._id, name: 'Grilled Chicken Salad', calories: mealAnalysis.estimatedCalories - 50, description: 'High protein, low carb' },
-    { mealAnalysis: mealAnalysis._id, name: 'Quinoa Bowl', calories: mealAnalysis.estimatedCalories + 20, description: 'Balanced macros' },
-    { mealAnalysis: mealAnalysis._id, name: 'Greek Yogurt Parfait', calories: mealAnalysis.estimatedCalories - 80, description: 'High protein snack' }
+
+    {
+      mealAnalysis: mealAnalysis._id,
+      name:'Grilled Chicken Salad',
+      calories: mealAnalysis.estimatedCalories - 50,
+      description:'High protein, low carb'
+    },
+
+    {
+      mealAnalysis: mealAnalysis._id,
+      name:'Quinoa Bowl',
+      calories: mealAnalysis.estimatedCalories + 20,
+      description:'Balanced macros'
+    }
+
   ]);
 
   return mealAnalysis;
