@@ -29,3 +29,6 @@ exports.validatePayment = async (paymentId) =>
 
 exports.getAllPayments = async () =>
   Payment.find().populate('user', 'name email').populate('subscription').sort('-createdAt');
+
+
+

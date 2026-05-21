@@ -24,3 +24,6 @@ exports.getProgressSummary = async (userId) => {
     totalEntries: entries.length
   };
 };
+
+
+

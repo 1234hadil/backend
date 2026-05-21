@@ -27,3 +27,7 @@ exports.getClients = async (userId) => {
   if (!nutritionist) throw Object.assign(new Error('Profile not found'), { statusCode: 404 });
   return nutritionist.clients;
 };
+
+
+
+
