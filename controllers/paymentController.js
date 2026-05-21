@@ -2,8 +2,22 @@ const paymentService = require('../services/paymentService');
 
 exports.processPayment = async (req, res, next) => {
   try {
-    const { subscriptionId, amount, paymentMethod } = req.body;
-    const payment = await paymentService.processPayment(req.user.id, subscriptionId, amount, paymentMethod);
+    const payment = await paymentService.processPayment({
+
+      user: req.user.id,
+
+      fullName: req.body.fullName,
+      email: req.body.email,
+      age: req.body.age,
+      weight: req.body.weight,
+      goal: req.body.goal,
+      date: req.body.date,
+      time: req.body.time,
+      notes: req.body.notes,
+
+      paymentMethod: req.body.paymentMethod
+
+    });
     res.status(201).json({ success: true, data: payment });
   } catch (err) { next(err); }
 };

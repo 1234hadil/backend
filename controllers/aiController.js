@@ -2,6 +2,7 @@ const aiService = require('../services/aiService');
 
 exports.analyzeMeal = async (req, res) => {
   try {
+<<<<<<< HEAD
 
     if (!req.file) {
       return res.status(400).json({
@@ -10,6 +11,10 @@ exports.analyzeMeal = async (req, res) => {
       });
     }
 
+=======
+    
+    if (!req.file) return res.status(400).json({ success: false, message: 'Image file required' });
+>>>>>>> 917bfc592c51c5f59e83af9ab5b021522d013fb7
     const imageUrl = `/uploads/${req.file.filename}`;
 
     const analysis = await aiService.analyzeMeal(
